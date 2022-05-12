@@ -4,9 +4,9 @@ let bodyParser = require('body-parser');
 let Product = require('./products');
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
     return res.send({
         err: false,
         message: 'Welcome to RESTful CRUD API with NodeJS, Express, MYSQL',
@@ -15,25 +15,25 @@ app.get('/',(req,res)=>{
     })
 })
 
-app.get('/products',(req,res)=>{
-    Product.find().exec((err,doc)=>{
-        if(err)  return res.send('error');
+app.get('/products', (req, res) => {
+    Product.find().exec((err, doc) => {
+        if (err) return res.send('error');
         return res.send(doc);
     })
 })
 
-app.get('/products/:id',(req,res)=>{
-    let id = req.params.id;
+app.get('/products/:name', (req, res) => {
+    let name = req.params.name;
 
-    if(!id){
+    if (!name) {
         return res.status(400).send("Please provide id")
-    } else{
-        Product.findOne({"id":id}).exec((err,doc)=>{
-            if(err) return res.send('error');
+    } else {
+        Product.findOne({ "name": name }).exec((err, doc) => {
+            if (err) return res.send('error');
             let message = "";
-            if(doc === null){
+            if (doc === null) {
                 message = "Product not found";
-            } else{
+            } else {
                 message = doc;
             }
             return res.send(message);
@@ -41,57 +41,61 @@ app.get('/products/:id',(req,res)=>{
     }
 })
 
-app.post('/product',(req,res)=>{
+app.post('/product', (req, res) => {
     let id = req.body.id;
     let name = req.body.name;
     let price = req.body.price;
     let description = req.body.description;
 
-    if(!id || !name || !price || !description){
+    if (!id || !name || !price || !description) {
         return res.status(400).send("Please provide to complete")
-    }else{
-        Product.insertMany([{"id":id,"name":name,"price":price,"description":description}]).then(()=>{
-            Product.find().exec((err,doc)=>{
-                if(err)  return res.send('error find');
+    } else {
+        Product.insertMany([{ "id": id, "name": name, "price": price, "description": description }]).then(() => {
+            Product.updateMany({ "__v": 0 }, { '$unset': { "__v": "" } }).exec((err,doc)=>{
+                if(err) throw err;
+            })
+        }).then(() => {
+            Product.find().exec((err, doc) => {
+                if (err) return res.send('error find');
                 return res.send(doc);
             })
         })
     }
 })
 
-app.put('/product',(req,res)=>{
+app.put('/product', (req, res) => {
     let id = req.body.id;
     let name = req.body.name;
     let price = req.body.price;
     let description = req.body.description;
 
-    if(!id || !name || !price || !description){
+    if (!id || !name || !price || !description) {
         return res.status(400).send("Please provide to complete");
-    }else{
-        Product.updateOne({id},{$set:{"name":name,"price":price,"description":description}}).then(()=>{
-            Product.find().exec((err,doc)=>{
-                if(err)  return res.send('error find');
+    } else {
+        Product.updateOne({ id }, { $set: { "name": name, "price": price, "description": description } }).then(() => {
+            Product.find().exec((err, doc) => {
+                if (err) return res.send('error find');
                 return res.send(doc);
             })
         })
     }
 })
 
-app.delete('/product',(req,res)=>{
+app.delete('/product', (req, res) => {
     let id = req.body.id;
 
-    if(!id){
-        return res.status(400).send({error: true, message: "Please provide product id"});
-    }else{
-        Product.deleteOne({id}).then(()=>{
-            Product.find().exec((err,doc)=>{
-                if(err)  return res.send('error find');
+    if (!id) {
+        return res.status(400).send({ error: true, message: "Please provide product id" });
+    } else {
+        Product.deleteOne({ id }).then(() => {
+            Product.find().exec((err, doc) => {
+                if (err) return res.send('error find');
                 return res.send(doc);
             })
         })
     }
 })
 
-app.listen(3000, ()=>{
+app.listen(3000, () => {
     console.log('Node App is running on port 3000')
 })
